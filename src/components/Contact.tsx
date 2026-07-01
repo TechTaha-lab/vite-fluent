@@ -2,16 +2,15 @@ import {
   Button,
   Card,
   CardHeader,
-  Field,
-  Input,
   Text,
-  Textarea,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
 import { Send24Regular } from "@fluentui/react-icons";
-import { useState } from "react";
-import Validator from "../auth/Validator";
+import { useMemo } from "react";
+import { DynamicFormRenderer } from "../dynamic-renderer/dynamic-form-renderer";
+import { DynamicFormWrapper } from "../dynamic-renderer/dynamic-form-wrapper";
+import { CustomInputType, type FormInputData } from "../dynamic-renderer/types";
 
 const useStyles = makeStyles({
   container: {
@@ -49,81 +48,63 @@ const useStyles = makeStyles({
   },
 });
 
-interface ContactForm {
-  fullName: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
-interface ContactErrors {
-  fullName: string | null;
-  email: string | null;
-  subject: string | null;
-  message: string | null;
-}
-
-const initialForm: ContactForm = {
-  fullName: "",
-  email: "",
-  subject: "",
-  message: "",
-};
-
-const initialErrors: ContactErrors = {
-  fullName: null,
-  email: null,
-  subject: null,
-  message: null,
-};
-
 export default function Contact() {
   const styles = useStyles();
 
-  const [form, setForm] = useState(initialForm);
-  const [errors, setErrors] = useState(initialErrors);
+  const formData: FormInputData[] = useMemo(
+    () => [
+      {
+        name: "fullName",
+        title: "Full Name",
+        type: CustomInputType.Text,
+        placeholder: "John Doe",
+        value: "",
+        required: true,
+        isDisabled: false,
+        width: "100%",
+      },
+      {
+        name: "email",
+        title: "Email Address",
+        type: CustomInputType.Email,
+        placeholder: "john@example.com",
+        value: "",
+        required: true,
+        isDisabled: false,
+        width: "100%",
+      },
+      {
+        name: "subject",
+        title: "Subject",
+        type: CustomInputType.Text,
+        placeholder: "How can we help?",
+        value: "",
+        required: true,
+        isDisabled: false,
+        width: "100%",
+      },
+      {
+        name: "message",
+        title: "Message",
+        type: CustomInputType.Textarea,
+        placeholder: "Write your message here...",
+        value: "",
+        required: true,
+        isDisabled: false,
+        width: "100%",
+      },
+    ],
+    []
+  );
 
-  const handleChange = (
-    field: keyof ContactForm,
-    value: string
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const handleSubmit = (values: any) => {
+    const messages = JSON.parse(localStorage.getItem("contactMessages") || "[]");
 
-  const handleSubmit = () => {
-    const validationErrors: ContactErrors = {
-      fullName: Validator.required(form.fullName),
-      email: Validator.email(form.email),
-      subject: Validator.required(form.subject),
-      message:
-        Validator.required(form.message) ??
-        Validator.minLength(form.message, 10),
-    };
+    messages.push(values);
 
-    setErrors(validationErrors);
-
-    if (Object.values(validationErrors).some((error) => error !== null)) {
-      return;
-    }
-
-    const messages: ContactForm[] = JSON.parse(
-      localStorage.getItem("contactMessages") || "[]"
-    );
-
-    messages.push(form);
-
-    localStorage.setItem(
-      "contactMessages",
-      JSON.stringify(messages)
-    );
+    localStorage.setItem("contactMessages", JSON.stringify(messages));
 
     alert("Message sent successfully!");
-
-    setForm(initialForm);
-    setErrors(initialErrors);
   };
 
   return (
@@ -142,77 +123,32 @@ export default function Contact() {
           }
         />
 
-        <Field
-          label="Full Name"
-          required
-          validationState={errors.fullName ? "error" : "none"}
-          validationMessage={errors.fullName}
+        <DynamicFormWrapper
+          data={formData}
+          handleOnSubmitValues={handleSubmit}
+          isArabic={false}
+          formName="contact-form"
         >
-          <Input
-            placeholder="John Doe"
-            value={form.fullName}
-            onChange={(_, data) =>
-              handleChange("fullName", data.value)
-            }
-          />
-        </Field>
+          {({ values, handleChange }: any) => (
+            <>
+              <DynamicFormRenderer
+                data={formData}
+                values={values}
+                handleChange={handleChange}
+                isArabic={false}
+              />
 
-        <Field
-          label="Email Address"
-          required
-          validationState={errors.email ? "error" : "none"}
-          validationMessage={errors.email}
-        >
-          <Input
-            type="email"
-            placeholder="john@example.com"
-            value={form.email}
-            onChange={(_, data) =>
-              handleChange("email", data.value)
-            }
-          />
-        </Field>
-
-        <Field
-          label="Subject"
-          required
-          validationState={errors.subject ? "error" : "none"}
-          validationMessage={errors.subject}
-        >
-          <Input
-            placeholder="How can we help?"
-            value={form.subject}
-            onChange={(_, data) =>
-              handleChange("subject", data.value)
-            }
-          />
-        </Field>
-
-        <Field
-          label="Message"
-          required
-          validationState={errors.message ? "error" : "none"}
-          validationMessage={errors.message}
-        >
-          <Textarea
-            placeholder="Write your message here..."
-            resize="vertical"
-            rows={6}
-            value={form.message}
-            onChange={(_, data) =>
-              handleChange("message", data.value)
-            }
-          />
-        </Field>
-
-        <Button
-          appearance="primary"
-          icon={<Send24Regular />}
-          className={styles.button}
-          onClick={handleSubmit}
-        >
-          Send Message
-        </Button>
+              <Button
+                appearance="primary"
+                icon={<Send24Regular />}
+                className={styles.button}
+                type="submit"
+              >
+                Send Message
+              </Button>
+            </>
+          )}
+        </DynamicFormWrapper>
       </Card>
     </section>
   );
