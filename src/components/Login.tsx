@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   Button,
   Card,
@@ -7,7 +7,7 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import type { FormInputData } from "../dynamic-renderer";
+import { CustomInputType, type FormInputData } from "../dynamic-renderer/types";
 import { DynamicFormWrapper } from "../dynamic-renderer/dynamic-form-wrapper";
 import { DynamicFormRenderer } from "../dynamic-renderer/dynamic-form-renderer";
 import { useNavigate } from "react-router-dom";
@@ -62,19 +62,23 @@ export const Login = () => {
       {
         name: "email",
         title: "Email",
-        type: "Email",
+        type: CustomInputType.Email,
         placeholder: "Enter your email",
         value: "",
         required: true,
+        isDisabled: false,
+        width: "100%",
       },
       {
         name: "password",
         title: "Password",
-        type: "Password",
+        type: CustomInputType.Password,
         placeholder: "Enter your password",
         value: "",
         required: true,
         minLength: 8,
+        isDisabled: false,
+        width: "100%",
       },
     ],
     []
@@ -121,7 +125,7 @@ export const Login = () => {
           isArabic={false}
           formName="login-form"
         >
-          {({ values, handleChange }) => (
+          {({ values, handleChange }: any) => (
             <>
               <DynamicFormRenderer
                 data={formData}

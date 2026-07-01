@@ -1,17 +1,6 @@
 import { type CSSProperties, type ChangeEvent } from "react";
+import type { RadioOption } from "./renderer-input";
 
-export interface RadioOption {
-  label: string;
-  value: string | number;
-}
-
-export interface IAttachment {
-  id?: string;
-  name?: string;
-  url?: string;
-  size?: number;
-  file?: File;
-}
 
 // ─── Enum ────────────────────────────────────────────────────────────────────
 export enum CustomInputType {
@@ -190,3 +179,11 @@ export interface FormInputData {
   filesOnRead?: IAttachment | IAttachment[] | null;
 }
 
+
+export interface IAttachment {
+    get id(): string;
+    get fileName(): string;
+    get name(): string;
+    get contentType(): string;
+    get date(): Date | undefined;
+}

@@ -1,8 +1,6 @@
-import React from "react";
 import type { ReactNode } from "react";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from  "../ui/field"
 import type { BaseInputProps } from "./types";
-import i18n from "@/i18n";
 
 interface FormFieldProps
   extends Pick<

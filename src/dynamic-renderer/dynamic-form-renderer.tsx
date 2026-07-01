@@ -2,8 +2,9 @@ import React, { type FC } from "react";
 import { FormikConsumer } from "formik";
 import { CustomInputType, type FormInputData } from "./types";
 import { RendererInput } from "./renderer-input";
+import { cn } from "../lib/utils";
 
-const cx = (...classes: Array<string | undefined | false>) => classes.filter(Boolean).join(" ");
+
 
 export interface IDynamicFormRendererProps {
   data: FormInputData[];
@@ -41,49 +42,52 @@ export const DynamicFormRenderer: FC<IDynamicFormRendererProps> = ({
 
 
   return (
-    <div className={cx("dynamic-form-grid", className)}>
+    <div className={cn("flex flex-wrap -mx-2", className)}>
       {data?.map(
         (field, index) =>
           !field?.hidden && (
             <React.Fragment key={index}>
-              <div key={index} className={field?.width || "dynamic-form-field"}>
+              <div key={index} className={cn("p-2", field?.width || "mb-4 px-2")}>
                 <FormikConsumer>
-                  {({ errors, touched }) => (
-                    <>
-                      <RendererInput
-                        isDropdownSearchable={field?.isDropdownSearchable}
-                        searchPlaceholder={field?.searchPlaceholder}
-                        accept={field?.accept}
-                        maxFileSize={field.maxFileSize}
-                        maxFilesCount={field.maxFilesCount}
-                        label={field.title}
-                        value={(values as any)[field.name]}
-                        name={field.name}
-                        options={field.options || []}
-                        multiple={field.isMulti}
-                        dropdownOptions={field.dropdownOptions || []}
-                        type={field.type as CustomInputType}
-                        placeholder={field.placeholder}
-                        onChange={handleChange}
-                        isDisabled={field.isDisabled}
-                        required={field.required}
-                        minDate={field?.minDate}
-                        maxDate={field?.maxDate}
-                        max={field?.maxNumber}
-                        min={field?.minNumber}
-                        maxLength={field?.maxLength}
-                        minLength={field?.minLength}
-                        hintText={field?.hintText}
-                        className={field.inputClassName}
-                        errorMessage={touched[field.name] ? (errors[field?.name] as string) : ""}
-                        isArabic={field?.isArabic || isArabic}
-                        onDownload={field?.onDownload}
-                        filesOnRead={field?.filesOnRead}
-                        regex={field.regex}
-                      />
+                  {({ errors, touched, submitCount }) => {
+                    const shouldShowError = Boolean(touched[field.name] || submitCount > 0);
 
-                    </>
-                  )}
+                    return (
+                      <>
+                        <RendererInput
+                          isDropdownSearchable={field?.isDropdownSearchable}
+                          searchPlaceholder={field?.searchPlaceholder}
+                          accept={field?.accept}
+                          maxFileSize={field.maxFileSize}
+                          maxFilesCount={field.maxFilesCount}
+                          label={field.title}
+                          value={(values as any)[field.name]}
+                          name={field.name}
+                          options={field.options || []}
+                          multiple={field.isMulti}
+                          dropdownOptions={field.dropdownOptions || []}
+                          type={field.type as CustomInputType}
+                          placeholder={field.placeholder}
+                          onChange={handleChange}
+                          isDisabled={field.isDisabled}
+                          required={field.required}
+                          minDate={field?.minDate}
+                          maxDate={field?.maxDate}
+                          max={field?.maxNumber}
+                          min={field?.minNumber}
+                          maxLength={field?.maxLength}
+                          minLength={field?.minLength}
+                          hintText={field?.hintText}
+                          className={field.inputClassName}
+                          errorMessage={shouldShowError ? (errors[field?.name] as string) : ""}
+                          isArabic={field?.isArabic || isArabic}
+                          onDownload={field?.onDownload}
+                          filesOnRead={field?.filesOnRead}
+                          regex={field.regex}
+                        />
+                      </>
+                    );
+                  }}
                 </FormikConsumer>
               </div>
             </React.Fragment>

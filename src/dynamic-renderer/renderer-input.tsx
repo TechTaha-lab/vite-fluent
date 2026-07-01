@@ -1,14 +1,23 @@
 import React from "react";
+import { CustomInputType, Regex, type DropdownOption, type IAttachment } from "./types";
 import {
-  Checkbox,
-  Field,
   Input,
-  Radio,
-  RadioGroup,
-  Select,
   Textarea,
+  Checkbox,
+  RadioGroup,
+  Radio,
+  Dropdown,
+  Option,
+  Field,
+  type SelectionEvents,
+  type OptionOnSelectData,
 } from "@fluentui/react-components";
-import { CustomInputType, type DropdownOption, type RadioOption } from "./types";
+ 
+
+export interface RadioOption {
+  label: string;
+  value: string | number;
+}
 
 export interface RendererInputProps {
   type: CustomInputType;
@@ -21,18 +30,31 @@ export interface RendererInputProps {
   errorMessage?: string;
   className?: string;
   isArabic?: boolean;
+  regex?: Regex;
   onChange?: (e: React.ChangeEvent<any>) => void;
+  // date
   minDate?: string | Date;
   maxDate?: string | Date;
+  // number
   min?: number;
   max?: number;
+  // text / textarea
   minLength?: number;
   maxLength?: number;
-  options?: RadioOption[];
-  dropdownOptions?: DropdownOption[];
-  multiple?: boolean;
+  maxFileSize?: number;
+  maxFilesCount?: number;
   accept?: string;
   hintText?: string;
+  onDownload?: (attachmentId: string) => void | Promise<void>;
+  // radio
+  options?: RadioOption[];
+  // dropdown
+  dropdownOptions?: DropdownOption[];
+  multiple?: boolean;
+  values?: Array<string | number>;
+  searchPlaceholder?: string;
+  isDropdownSearchable?: boolean;
+  filesOnRead?: IAttachment[] | IAttachment | null;
 }
 
 export function RendererInput({
@@ -51,177 +73,275 @@ export function RendererInput({
   maxDate,
   min,
   max,
+  hintText,
   options = [],
   dropdownOptions = [],
   multiple,
+  values,
   accept,
-  hintText,
+  maxFileSize,
+  maxFilesCount,
+  onDownload,
+  filesOnRead,
   maxLength,
   minLength,
+  regex,
 }: RendererInputProps) {
-  const validationState = errorMessage ? "error" : "none";
-  const inputProps = {
-    id: name,
-    name,
-    value: value ?? "",
-    placeholder,
-    disabled: isDisabled,
+  void values;
+  void maxFileSize;
+  void maxFilesCount;
+  void onDownload;
+  void filesOnRead;
+  void regex;
+
+  const dir = isArabic ? "rtl" : "ltr";
+
+  // Shared Field wrapper props
+  const fieldProps = {
+    label,
     required,
+    hint: hintText,
+    validationState: errorMessage ? ("error" as const) : undefined,
+    validationMessage: errorMessage,
     className,
-    onChange,
   };
 
-  return (
-    <Field
-      label={label}
-      required={required}
-      validationState={validationState}
-      validationMessage={errorMessage}
-      hint={hintText}
-      dir={isArabic ? "rtl" : "ltr"}
-    >
-      {renderControl({
-        type,
-        inputProps,
-        minDate,
-        maxDate,
-        min,
-        max,
-        minLength,
-        maxLength,
-        options,
-        dropdownOptions,
-        multiple,
-        accept,
-        checked: Boolean(value),
-        value,
-        onChange,
-        isDisabled,
-      })}
-    </Field>
-  );
-}
-
-function renderControl({
-  type,
-  inputProps,
-  minDate,
-  maxDate,
-  min,
-  max,
-  minLength,
-  maxLength,
-  options,
-  dropdownOptions,
-  multiple,
-  accept,
-  checked,
-  value,
-  onChange,
-  isDisabled,
-}: {
-  type: CustomInputType;
-  inputProps: React.ComponentProps<typeof Input>;
-  minDate?: string | Date;
-  maxDate?: string | Date;
-  min?: number;
-  max?: number;
-  minLength?: number;
-  maxLength?: number;
-  options: RadioOption[];
-  dropdownOptions: DropdownOption[];
-  multiple?: boolean;
-  accept?: string;
-  checked: boolean;
-  value?: any;
-  onChange?: (e: React.ChangeEvent<any>) => void;
-  isDisabled?: boolean;
-}) {
   switch (type) {
-    case CustomInputType.Email:
-      return <Input {...inputProps} type="email" />;
-    case CustomInputType.Password:
-      return <Input {...inputProps} type="password" minLength={minLength} maxLength={maxLength} />;
-    case CustomInputType.Number:
-      return <Input {...inputProps} type="number" min={min} max={max} />;
-    case CustomInputType.Date:
-      return <Input {...inputProps} type="date" min={formatDateLimit(minDate)} max={formatDateLimit(maxDate)} />;
-    case CustomInputType.DateTime:
-      return (
-        <Input
-          {...inputProps}
-          type="datetime-local"
-          min={formatDateLimit(minDate)}
-          max={formatDateLimit(maxDate)}
-        />
-      );
-    case CustomInputType.Time:
-      return <Input {...inputProps} type="time" />;
-    case CustomInputType.Textarea:
-      return (
-        <Textarea
-          id={inputProps.id}
-          name={inputProps.name}
-          value={String(inputProps.value ?? "")}
-          placeholder={inputProps.placeholder}
-          disabled={inputProps.disabled}
-          required={inputProps.required}
-          className={inputProps.className}
-          onChange={onChange}
-          maxLength={maxLength}
-        />
-      );
-    case CustomInputType.Checkbox:
-      return (
-        <Checkbox
-          name={inputProps.name}
-          checked={checked}
-          disabled={isDisabled}
-          onChange={onChange as any}
-        />
-      );
-    case CustomInputType.Radio:
-      return (
-        <RadioGroup name={String(inputProps.name)} value={String(value ?? "")} onChange={onChange as any}>
-          {options.map((option) => (
-            <Radio key={option.value} value={String(option.value)} label={option.label} disabled={isDisabled} />
-          ))}
-        </RadioGroup>
-      );
-    case CustomInputType.Dropdown:
-      return (
-        <Select
-          id={inputProps.id}
-          name={inputProps.name}
-          value={String(value ?? "")}
-          disabled={inputProps.disabled}
-          required={inputProps.required}
-          className={inputProps.className}
-          onChange={onChange as any}
-          multiple={multiple}
-        >
-          <option value="">{inputProps.placeholder || "Select an option"}</option>
-          {dropdownOptions.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      );
-    case CustomInputType.File:
-      return <Input id={inputProps.id} name={inputProps.name} type="file" accept={accept} onChange={onChange} />;
     case CustomInputType.Text:
     case CustomInputType.TextOnly:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="text"
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            maxLength={maxLength}
+            minLength={minLength}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Number:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="number"
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            min={min}
+            max={max}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Email:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="email"
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Password:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="password"
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Date:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="date"
+            dir={dir}
+            disabled={isDisabled}
+            value={value ?? ""}
+            min={minDate ? String(minDate) : undefined}
+            max={maxDate ? String(maxDate) : undefined}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.DateTime:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="datetime-local"
+            dir={dir}
+            disabled={isDisabled}
+            value={value ?? ""}
+            min={minDate ? String(minDate) : undefined}
+            max={maxDate ? String(maxDate) : undefined}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Time:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="time"
+            dir={dir}
+            disabled={isDisabled}
+            value={value ?? ""}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Textarea:
+      return (
+        <Field {...fieldProps}>
+          <Textarea
+            name={name}
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            maxLength={maxLength}
+            minLength={minLength}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Checkbox:
+      return (
+        <Field validationState={errorMessage ? "error" : undefined} validationMessage={errorMessage} className={className}>
+          <Checkbox
+            name={name}
+            label={label}
+            disabled={isDisabled}
+            checked={!!value}
+            required={required}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Radio:
+      return (
+        <Field {...fieldProps}>
+          <RadioGroup
+            name={name}
+            value={value ?? ""}
+            disabled={isDisabled}
+            onChange={onChange}
+          >
+            {options.map((opt) => (
+              <Radio key={opt.value} value={String(opt.value)} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </Field>
+      );
+
+    case CustomInputType.File:
+      return (
+        <Field {...fieldProps}>
+          <input
+            name={name}
+            type="file"
+            dir={dir}
+            disabled={isDisabled}
+            multiple={multiple}
+            accept={accept}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
     case CustomInputType.IBAN:
+      return (
+        <Field {...fieldProps}>
+          <Input
+            name={name}
+            type="text"
+            dir={dir}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            value={value ?? ""}
+            onChange={onChange}
+          />
+        </Field>
+      );
+
+    case CustomInputType.Dropdown: {
+      const selectedOptions = multiple
+        ? (Array.isArray(value) ? value.map(String) : [])
+        : value != null
+        ? [String(value)]
+        : [];
+
+      const displayValue = dropdownOptions
+        .filter((opt) => selectedOptions.includes(String(opt.value)))
+        .map((opt) => opt.label)
+        .join(", ");
+
+      const handleOptionSelect = (
+        _event: SelectionEvents,
+        data: OptionOnSelectData,
+      ) => {
+        if (!onChange) return;
+        const syntheticEvent = {
+          target: {
+            name,
+            value: multiple ? data.selectedOptions : data.optionValue,
+          },
+        } as unknown as React.ChangeEvent<any>;
+        onChange(syntheticEvent);
+      };
+
+      return (
+        <Field {...fieldProps}>
+          <Dropdown
+            name={name}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            multiselect={multiple}
+            selectedOptions={selectedOptions}
+            value={displayValue}
+            onOptionSelect={handleOptionSelect}
+          >
+            {dropdownOptions.map((opt) => (
+              <Option key={opt.value} value={String(opt.value)} text={opt.label}>
+                {opt.label}
+              </Option>
+            ))}
+          </Dropdown>
+        </Field>
+      );
+    }
+
     default:
-      return <Input {...inputProps} type="text" minLength={minLength} maxLength={maxLength} />;
+      return null;
   }
-}
-
-function formatDateLimit(value?: string | Date) {
-  if (!value) {
-    return undefined;
-  }
-
-  return value instanceof Date ? value.toISOString().slice(0, 10) : value;
 }
